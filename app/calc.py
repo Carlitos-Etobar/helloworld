@@ -10,7 +10,7 @@ class Calculator:
         self.check_types(x, y)
         return x + y
 
-    def subtract(self, x, y):  # Corregido el nombre del método por TOC
+    def substract(self, x, y):
         self.check_types(x, y)
         return x - y
 
@@ -30,7 +30,7 @@ class Calculator:
         return x ** y
 
     def check_types(self, x, y):
-        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+        if not isinstance(x, (int, float)) or                                                not isinstance(y, (int, float)):
             raise TypeError("Parameters must be numbers")
 
 
