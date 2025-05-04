@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent windows
 
     stages {
         stage('Get Code') {
@@ -36,7 +36,8 @@ pipeline {
                                 SET FLASK_APP=app\\api.py
                                 SET FLASK_ENV=development
                                 start "" /B flask run
-                                start "" /B java -jar F:\\Agentes\\wiremock-jre8-standalone-2.28.0.jar --port 9090 -v --root-dir F:\\Repositorios\\helloworld\\test\\wiremock
+                                curl -L -O https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-jre8-standalone/2.28.0/wiremock-jre8-standalone-2.28.0.jar
+                                start "" /B java -jar wiremock-jre8-standalone-2.28.0.jar --port 9090 -v --root-dir test\\wiremock
                                 
                                 REM Check del puerto 5000 para flask
                                 :wait_for_flask
