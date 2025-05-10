@@ -35,29 +35,10 @@ pipeline {
                             bat '''
                                 SET FLASK_APP=app\\api.py
                                 SET FLASK_ENV=development
-                                start "" /B flask run
                                 curl -L -O https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-jre8-standalone/2.28.0/wiremock-jre8-standalone-2.28.0.jar
                                 ping 127.0.0.1 -n 2 >nul
+                                start "" /B flask run
                                 start "" /B java -jar wiremock-jre8-standalone-2.28.0.jar --port 9090 -v --root-dir test\\wiremock
-                                
-                                REM Check del puerto 5000 para flask
-                                :wait_for_flask
-                                for /f "tokens=5" %%a in ('netstat -ano ^| find ":5000" ^| find "LISTENING"') do (
-                                    goto flask_ready
-                                )
-                                ping 127.0.0.1 -n 2 >nul
-                                goto wait_for_flask
-                                :flask_ready
-                                
-                                REM Check del puerto 9090 para wiremock
-                                :wait_for_wiremock
-                                for /f "tokens=5" %%a in ('netstat -ano ^| find ":9090" ^| find "LISTENING"') do (
-                                    goto wiremock_ready
-                                )
-                                ping 127.0.0.1 -n 2 >nul
-                                goto wait_for_wiremock
-                                :wiremock_ready
-                                
                                 set PYTHONPATH=%WORKSPACE%
                                 pytest --junitxml=result-rest.xml test\\rest
                             '''
