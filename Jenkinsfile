@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent windows
 
     stages {
         stage('Get Code') {
