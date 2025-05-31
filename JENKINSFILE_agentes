@@ -1,6 +1,10 @@
 pipeline {
     agent none
 
+    options {
+        skipDefaultCheckout(true)
+    }
+    
     stages {
         stage('Get Code') {
             agent { label 'windows' }
