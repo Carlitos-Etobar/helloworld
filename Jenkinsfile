@@ -45,7 +45,11 @@ pipeline {
                         bat '''
                             flake8 app > flake8-result.txt || exit 0
                         '''
-                        recordIssues tools: [flake8()]
+                        recordIssues tools: [flake8()],
+                            qualityGates: [
+                                [threshold: 8, type: 'TOTAL', unstable: true],
+                                [threshold: 10, type: 'TOTAL', failure: true]
+                            ]
                     }
                 }
 
@@ -53,8 +57,8 @@ pipeline {
                     steps {
                         bat '''
                             bandit -r app -f txt -o bandit-result.txt || exit 0
-                            type bandit-result.txt
                         '''
+                        archiveArtifacts artifacts: 'bandit-result.txt', onlyIfSuccessful: true
                     }
                 }
 
