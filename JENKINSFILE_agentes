@@ -58,7 +58,7 @@ pipeline {
                         sh 'whoami && hostname && echo $WORKSPACE'
                         unstash 'source-code'
                         sh '''
-                            flake8 app > flake8-result.txt || exit 0
+                            python3 -m flake8 app > flake8-result.txt || exit 0
                         '''
                         recordIssues tools: [flake8()],
                             qualityGates: [
