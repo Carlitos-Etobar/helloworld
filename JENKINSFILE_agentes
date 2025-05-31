@@ -12,6 +12,15 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            agent { label 'linux' }
+            steps {
+                sh 'whoami && hostname && echo $WORKSPACE'
+                echo 'NO HAY QUE COMPILAR NADA. ESTO ES PYTHON'
+                unstash 'source-code'
+            }
+        }
+
         stage('Tests') {
             parallel {
                 stage('Unit') {
