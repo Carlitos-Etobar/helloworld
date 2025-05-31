@@ -19,13 +19,13 @@ pipeline {
         stage('Tests') {
             parallel {
                 stage('Unit') {
-                    agent { label 'windows' }
+                    agent { label 'linux' }
                     steps {
-                        bat 'whoami && hostname && echo %WORKSPACE%'
+                        sh 'whoami && hostname && echo $WORKSPACE'
                         unstash 'source-code'
-                        bat '''
-                            set PYTHONPATH=%WORKSPACE%
-                            pytest --junitxml=result-unit.xml test\\unit
+                        sh '''
+                            export PYTHONPATH=$WORKSPACE
+                            pytest --junitxml=result-unit.xml test/unit
                         '''
                         stash name: 'unit-results', includes: 'result-unit.xml'
                     }
