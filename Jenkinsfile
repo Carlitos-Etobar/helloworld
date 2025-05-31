@@ -11,13 +11,7 @@ pipeline {
                 echo WORKSPACE
             }
         }
-        
-        stage('Build') {
-            steps {
-                echo 'NO HAY QUE COMPILAR NADA. ESTO ES PYTHON'
-            }
-        }
-        
+
         stage('Tests') {
             parallel {
                 stage('Unit') {
@@ -28,7 +22,7 @@ pipeline {
                         '''
                     }
                 }
-                
+
                 stage('Rest') {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -45,9 +39,60 @@ pipeline {
                         }
                     }
                 }
+
+                stage('Static') {
+                    steps {
+                        bat '''
+                            flake8 app > flake8-result.txt || exit 0
+                        '''
+                        recordIssues tools: [flake8()]
+                    }
+                }
+
+                stage('Security') {
+                    steps {
+                        bat '''
+                            bandit -r app -f txt -o bandit-result.txt || exit 0
+                            type bandit-result.txt
+                        '''
+                    }
+                }
+
+                stage('Coverage') {
+                    steps {
+                        bat '''
+                            set PYTHONPATH=.
+                            coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest test\\unit
+                            coverage xml
+                        '''
+                        recordCoverage(
+                            tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+                            sourceCodeRetention: 'EVERY_BUILD',
+                            failOnError: false,
+                            qualityGates: [
+                                [threshold: 90.0, metric: 'LINE', baseline: 'PROJECT'],
+                                [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT']
+                            ]
+                        )
+                    }
+                }
+
+                stage('Performance') {
+                    steps {
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat '''
+                                call "C:\\apache-jmeter-5.6.3\\bin\\jmeter.bat" -n -t C:\\test-plan.jmx -l test\\results.jtl
+                            '''
+                            step([
+                                $class: 'PerformancePublisher',
+                                sourceDataFiles: 'test/results.jtl'
+                            ])
+                        }
+                    }
+                }
             }
         }
-        
+
         stage('Results') {
             steps {
                 junit 'result*.xml'
