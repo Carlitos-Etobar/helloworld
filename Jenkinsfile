@@ -58,9 +58,16 @@ pipeline {
                 stage('Security') {
                     steps {
                         bat '''
-                            bandit -r app -f sarif -o bandit-result.sarif || exit 0
+                            bandit -r app -f xml -o bandit-result.xml || exit 0
                         '''
-                        recordIssues tools: [sarif(pattern: 'bandit-result.sarif')]
+                        recordIssues tools: [genericParser(
+                            name: 'Bandit',
+                            pattern: 'bandit-result.xml',
+                            script: [
+                                regexp: '<issue severity="(?<severity>.*?)" confidence="(?<confidence>.*?)" text="(?<message>.*?)" test_id="(?<category>.*?)" file="(?<fileName>.*?)" line_number="(?<line>\\d+)"',
+                                example: '<issue severity="LOW" confidence="HIGH" text="Use of assert detected. The enclosed code will be removed when compiling to optimised byte code." test_id="B101" file="example.py" line_number="5"'
+                            ]
+                        )]
                     }
                 }
 
