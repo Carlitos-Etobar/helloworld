@@ -60,7 +60,7 @@ pipeline {
                         bat '''
                             bandit -r app -f txt -o bandit-result.txt || exit 0
                         '''
-                        archiveArtifacts artifacts: 'bandit-result.txt', onlyIfSuccessful: true
+                        recordIssues tools: [genericTool(pattern: 'bandit-result.txt')]
                     }
                 }
 
