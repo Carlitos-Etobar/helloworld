@@ -89,6 +89,10 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
+                        SET FLASK_APP=app\\api.py
+                        SET FLASK_ENV=development
+                        start "" /B flask run
+                        ping 127.0.0.1 -n 5 >nul
                         call "C:\\apache-jmeter-5.6.3\\bin\\jmeter.bat" -n -t C:\\test-plan.jmx -l test\\results.jtl
                     '''
                     step([
