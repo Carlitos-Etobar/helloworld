@@ -58,9 +58,9 @@ pipeline {
                 stage('Security') {
                     steps {
                         bat '''
-                            bandit -r app -f txt -o bandit-result.txt || exit 0
+                            bandit -r app -f sarif -o bandit-result.sarif || exit 0
                         '''
-                        recordIssues tools: [tool(name: 'Bandit', pattern: 'bandit-result.txt')]
+                        recordIssues tools: [sarif(pattern: 'bandit-result.sarif')]
                     }
                 }
 
