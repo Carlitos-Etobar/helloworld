@@ -58,22 +58,10 @@ pipeline {
                 stage('Security Test') {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat 'bandit -r app -f json -o bandit_output.json'
-                            script {
-                                def jsonText = readFile('bandit_output.json')
-                                def parsed = new groovy.json.JsonSlurperClassic().parseText(jsonText)
-                                def findings = parsed.results.size()
-                                echo "Bandit encontró ${findings} hallazgos de seguridad"
-
-                                if (findings >= 4) {
-                                    error("Demasiados hallazgos (≥4) — marcando como ROJO")
-                                } else if (findings >= 2) {
-                                    unstable("Hallazgos moderados (≥2 y <4) — marcando como NARANJA")
-                                } else {
-                                    echo "Pocos hallazgos (<2) — marcando como VERDE"
-                                }
-                            }
-                            archiveArtifacts artifacts: 'bandit_output.json', fingerprint: true
+                            bat '''
+                                bandit -r app -f json -o bandit_output.json
+                                python -c "import json; d=json.load(open('bandit_output.json')); c=len(d.get('results', [])); print(f'Bandit encontró {c} hallazgos'); exit(1 if c>=4 else 2 if c>=2 else 0)"
+                            '''
                         }
                     }
                 }
