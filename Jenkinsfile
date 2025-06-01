@@ -55,19 +55,26 @@ pipeline {
                     }
                 }
 
-                stage('Security') {
+                stage('Security Test') {
                     steps {
-                        bat '''
-                            bandit -r app -f xml -o bandit-result.xml || exit 0
-                        '''
-                        recordIssues tools: [genericParser(
-                            name: 'Bandit',
-                            pattern: 'bandit-result.xml',
-                            script: [
-                                regexp: '<issue severity="(?<severity>.*?)" confidence="(?<confidence>.*?)" text="(?<message>.*?)" test_id="(?<category>.*?)" file="(?<fileName>.*?)" line_number="(?<line>\\d+)"',
-                                example: '<issue severity="LOW" confidence="HIGH" text="Use of assert detected. The enclosed code will be removed when compiling to optimised byte code." test_id="B101" file="example.py" line_number="5"'
-                            ]
-                        )]
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat 'bandit -r app -f json -o bandit_output.json'
+                            script {
+                                def jsonText = readFile('bandit_output.json')
+                                def parsed = new groovy.json.JsonSlurperClassic().parseText(jsonText)
+                                def findings = parsed.results.size()
+                                echo "Bandit encontró ${findings} hallazgos de seguridad"
+
+                                if (findings >= 4) {
+                                    error("Demasiados hallazgos (≥4) — marcando como ROJO")
+                                } else if (findings >= 2) {
+                                    unstable("Hallazgos moderados (≥2 y <4) — marcando como NARANJA")
+                                } else {
+                                    echo "Pocos hallazgos (<2) — marcando como VERDE"
+                                }
+                            }
+                            archiveArtifacts artifacts: 'bandit_output.json', fingerprint: true
+                        }
                     }
                 }
 
