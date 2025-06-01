@@ -25,9 +25,10 @@ pipeline {
                         unstash 'source-code'
                         sh '''
                             export PYTHONPATH=$WORKSPACE
-                            pytest --junitxml=result-unit.xml test/unit
+                            coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=result-unit.xml test/unit
+                            coverage xml
                         '''
-                        stash name: 'unit-results', includes: 'result-unit.xml'
+                        stash name: 'coverage-report', includes: 'coverage.xml'
                         junit 'result-unit.xml'
                     }
                 }
@@ -76,22 +77,21 @@ pipeline {
                         sh 'whoami && hostname && echo $WORKSPACE'
                         unstash 'source-code'
                         sh '''
-                            bandit -r app -f txt -o bandit-result.txt || exit 0
+                            bandit -r app -f json -o bandit_output.json
+                            python3 -c "import json; d=json.load(open('bandit_output.json')); c=len(d.get('results', [])); print(f'Bandit encontró {c} hallazgos'); exit(1 if c>=4 else 2 if c>=2 else 0)"
                         '''
-                        recordIssues tools: [genericTool(pattern: 'bandit-result.txt')]
                     }
                 }
+            }
+        }
 
+        stage('Post-Tests') {
+            parallel {
                 stage('Coverage') {
                     agent { label 'windows' }
                     steps {
                         bat 'whoami && hostname && echo %WORKSPACE%'
-                        unstash 'source-code'
-                        bat '''
-                            set PYTHONPATH=.
-                            coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest test\\unit
-                            coverage xml
-                        '''
+                        unstash 'coverage-report'
                         recordCoverage(
                             tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
                             sourceCodeRetention: 'EVERY_BUILD',
