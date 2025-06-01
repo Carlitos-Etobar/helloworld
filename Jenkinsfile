@@ -60,7 +60,7 @@ pipeline {
                         bat '''
                             bandit -r app -f txt -o bandit-result.txt || exit 0
                         '''
-                        recordIssues tools: [genericTool(pattern: 'bandit-result.txt')]
+                        recordIssues tools: [tool(name: 'Bandit', pattern: 'bandit-result.txt')]
                     }
                 }
 
