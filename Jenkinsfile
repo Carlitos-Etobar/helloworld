@@ -18,9 +18,11 @@ pipeline {
                     steps {
                         bat '''
                             set PYTHONPATH=%WORKSPACE%
-                            pytest --junitxml=result-unit.xml test\\unit
+                            coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
+                            coverage xml
                         '''
                         junit 'result-unit.xml'
+                        stash name: 'coverage-report', includes: 'coverage.xml'
                     }
                 }
 
@@ -65,38 +67,34 @@ pipeline {
                         }
                     }
                 }
+            }
+        }
 
-                stage('Coverage') {
-                    steps {
-                        bat '''
-                            set PYTHONPATH=.
-                            coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest test\\unit
-                            coverage xml
-                        '''
-                        recordCoverage(
-                            tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
-                            sourceCodeRetention: 'EVERY_BUILD',
-                            failOnError: false,
-                            qualityGates: [
-                                [threshold: 90.0, metric: 'LINE', baseline: 'PROJECT'],
-                                [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT']
-                            ]
-                        )
-                    }
-                }
+        stage('Coverage') {
+            steps {
+                unstash 'coverage-report'
+                recordCoverage(
+                    tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+                    sourceCodeRetention: 'EVERY_BUILD',
+                    failOnError: false,
+                    qualityGates: [
+                        [threshold: 90.0, metric: 'LINE', baseline: 'PROJECT'],
+                        [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT']
+                    ]
+                )
+            }
+        }
 
-                stage('Performance') {
-                    steps {
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat '''
-                                call "C:\\apache-jmeter-5.6.3\\bin\\jmeter.bat" -n -t C:\\test-plan.jmx -l test\\results.jtl
-                            '''
-                            step([
-                                $class: 'PerformancePublisher',
-                                sourceDataFiles: 'test/results.jtl'
-                            ])
-                        }
-                    }
+        stage('Performance') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                        call "C:\\apache-jmeter-5.6.3\\bin\\jmeter.bat" -n -t C:\\test-plan.jmx -l test\\results.jtl
+                    '''
+                    step([
+                        $class: 'PerformancePublisher',
+                        sourceDataFiles: 'test/results.jtl'
+                    ])
                 }
             }
         }
