@@ -6,7 +6,7 @@ pipeline {
             steps {
                 echo 'Me voy a traer el codigo'
                 // Obtener código del repo
-                git branch: 'feature_fix_coverage' 'https://github.com/Carlitos-Etobar/helloworld.git'
+                git branch: 'feature_fix_coverage', url: 'https://github.com/Carlitos-Etobar/helloworld.git'
                 bat 'dir'
                 echo WORKSPACE
             }
