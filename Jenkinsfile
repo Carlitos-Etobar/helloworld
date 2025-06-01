@@ -20,6 +20,7 @@ pipeline {
                             set PYTHONPATH=%WORKSPACE%
                             pytest --junitxml=result-unit.xml test\\unit
                         '''
+                        junit 'result-unit.xml' // Subir resultados de Unit
                     }
                 }
 
@@ -37,6 +38,7 @@ pipeline {
                                 pytest --junitxml=result-rest.xml test\\rest
                             '''
                         }
+                        junit 'result-rest.xml' // Subir resultados de Rest
                     }
                 }
 
@@ -94,12 +96,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-
-        stage('Results') {
-            steps {
-                junit 'result*.xml'
             }
         }
     }

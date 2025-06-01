@@ -28,6 +28,7 @@ pipeline {
                             pytest --junitxml=result-unit.xml test/unit
                         '''
                         stash name: 'unit-results', includes: 'result-unit.xml'
+                        junit 'result-unit.xml'
                     }
                 }
 
@@ -49,6 +50,7 @@ pipeline {
                             '''
                             stash name: 'rest-results', includes: 'result-rest.xml'
                         }
+                        junit 'result-rest.xml'
                     }
                 }
 
@@ -116,16 +118,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-
-        stage('Results') {
-            agent { label 'linux' }
-            steps {
-                sh 'whoami && hostname && echo $WORKSPACE'
-                unstash 'unit-results'
-                unstash 'rest-results'
-                junit 'result*.xml'
             }
         }
     }
