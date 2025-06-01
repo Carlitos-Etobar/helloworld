@@ -92,7 +92,6 @@ pipeline {
                 parallel {
                     stage('Coverage') {
                         steps {
-                            bat 'whoami && hostname && echo %WORKSPACE%'
                             unstash 'coverage-report'
                             recordCoverage(
                                 tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
@@ -108,7 +107,6 @@ pipeline {
 
                     stage('Performance') {
                         steps {
-                            bat 'whoami && hostname && echo %WORKSPACE%'
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                                 bat '''
                                     SET FLASK_APP=app\\api.py
