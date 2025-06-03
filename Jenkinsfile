@@ -61,9 +61,12 @@ pipeline {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
-                                bandit -r app -f json -o bandit_output.json
-                                python -c "import json; d=json.load(open('bandit_output.json')); c=len(d.get('results', [])); print(f'Bandit encontro {c} hallazgos'); exit(1 if c>=4 else 2 if c>=2 else 0)"
+                                bandit -r app -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}" || exit 0
                             '''
+                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [
+                                [threshold: 2, type: 'TOTAL', unstable: true],
+                                [threshold: 4, type: 'TOTAL', unstable: false]
+                            ]
                         }
                     }
                 }
