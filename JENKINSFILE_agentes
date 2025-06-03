@@ -78,7 +78,7 @@ pipeline {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             sh '''
-                                bandit -r app -f json -o bandit_output.json || true
+                                bandit -r . -f json -o bandit_output.json || true
                             '''
                         }
                         recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit_output.json')], qualityGates: [
