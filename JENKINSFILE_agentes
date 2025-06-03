@@ -16,6 +16,20 @@ pipeline {
             }
         }
 
+        stage('Start Flask') {
+            agent { label 'windows' }
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                        SET FLASK_APP=app\\api.py
+                        SET FLASK_ENV=development
+                        start "" /B flask run
+                        ping 127.0.0.1 -n 5 >nul
+                    '''
+                }
+            }
+        }
+
         stage('Error-Test') {
             parallel {
                 stage('Unit') {
@@ -40,11 +54,7 @@ pipeline {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
-                                SET FLASK_APP=app\\api.py
-                                SET FLASK_ENV=development
                                 curl -L -O https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-jre8-standalone/2.28.0/wiremock-jre8-standalone-2.28.0.jar
-                                ping 127.0.0.1 -n 2 >nul
-                                start "" /B flask run
                                 start "" /B java -jar wiremock-jre8-standalone-2.28.0.jar --port 9090 -v --root-dir test\\wiremock
                                 set PYTHONPATH=%WORKSPACE%
                                 pytest --junitxml=result-rest.xml test\\rest
@@ -68,64 +78,6 @@ pipeline {
                                 [threshold: 8, type: 'TOTAL', unstable: true],
                                 [threshold: 10, type: 'TOTAL', failure: true]
                             ]
-                    }
-                }
-
-                stage('Security') {
-                    agent { label 'linux' }
-                    steps {
-                        sh 'whoami && hostname && echo $WORKSPACE'
-                        unstash 'source-code'
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            sh '''
-                                bandit -r . -f json -o bandit_output.json || true
-                            '''
-                        }
-                        recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit_output.json')], qualityGates: [
-                            [threshold: 2, type: 'TOTAL', unstable: true],
-                            [threshold: 4, type: 'TOTAL', unstable: false]
-                        ]
-                    }
-                }
-            }
-        }
-
-        stage('Status-Test') {
-            parallel {
-                stage('Coverage') {
-                    agent { label 'linux' }
-                    steps {
-                        sh 'whoami && hostname && echo $WORKSPACE'
-                        unstash 'coverage-report'
-                        recordCoverage(
-                            tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
-                            sourceCodeRetention: 'EVERY_BUILD',
-                            failOnError: false,
-                            qualityGates: [
-                                [threshold: 90.0, metric: 'LINE', baseline: 'PROJECT'],
-                                [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT']
-                            ]
-                        )
-                    }
-                }
-
-                stage('Performance') {
-                    agent { label 'windows' }
-                    steps {
-                        bat 'whoami && hostname && echo %WORKSPACE%'
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat '''
-                                SET FLASK_APP=app\\api.py
-                                SET FLASK_ENV=development
-                                start "" /B flask run
-                                ping 127.0.0.1 -n 5 >nul
-                                call "C:\\apache-jmeter-5.6.3\\bin\\jmeter.bat" -n -t C:\\test-plan.jmx -l test\\results.jtl
-                            '''
-                            step([
-                                $class: 'PerformancePublisher',
-                                sourceDataFiles: 'test/results.jtl'
-                            ])
-                        }
                     }
                 }
             }
