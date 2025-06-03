@@ -76,10 +76,15 @@ pipeline {
                     steps {
                         sh 'whoami && hostname && echo $WORKSPACE'
                         unstash 'source-code'
-                        sh '''
-                            bandit -r app -f json -o bandit_output.json
-                            python3 -c "import json; d=json.load(open('bandit_output.json')); c=len(d.get('results', [])); print(f'Bandit encontró {c} hallazgos'); exit(1 if c>=4 else 2 if c>=2 else 0)"
-                        '''
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            sh '''
+                                bandit -r app -f json -o bandit_output.json || true
+                            '''
+                        }
+                        recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit_output.json')], qualityGates: [
+                            [threshold: 2, type: 'TOTAL', unstable: true],
+                            [threshold: 4, type: 'TOTAL', unstable: false]
+                        ]
                     }
                 }
             }
