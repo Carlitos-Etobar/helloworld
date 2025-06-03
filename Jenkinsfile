@@ -61,7 +61,7 @@ pipeline {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
-                                bandit -r app -f json -o bandit_output.json || exit 0
+                                bandit -r . -f json -o bandit_output.json || exit 0
                             '''
                             recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit_output.json')], qualityGates: [
                                 [threshold: 2, type: 'TOTAL', unstable: true],
