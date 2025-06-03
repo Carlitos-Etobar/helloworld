@@ -114,9 +114,7 @@ pipeline {
         stage('Cleanup') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-                    bat '''
-                        rmdir /S /Q %WORKSPACE% || exit 0
-                    '''
+                    cleanWs()
                 }
             }
         }
