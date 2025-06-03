@@ -115,8 +115,8 @@ pipeline {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
                     bat '''
+                        taskkill /FI "WINDOWTITLE eq WireMock*" /F || exit 0
                         taskkill /IM flask.exe /F || exit 0
-                        taskkill /IM java.exe /F || exit 0
                     '''
                     cleanWs()
                 }
