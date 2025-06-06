@@ -2,11 +2,17 @@ pipeline {
     agent { label 'windows' }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Get Code') {
             steps {
                 echo 'Me voy a traer el codigo'
                 // Obtener código del repo
-                git branch: 'feature_fix_coverage', url: 'https://github.com/Carlitos-Etobar/helloworld.git'
+                git 'https://github.com/Carlitos-Etobar/helloworld.git'
                 bat 'dir'
                 echo WORKSPACE
             }
