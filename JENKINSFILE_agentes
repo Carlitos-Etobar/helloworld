@@ -80,10 +80,10 @@ pipeline {
                         sh '''
                             python3 -m flake8 app > flake8-result.txt || exit 0
                         '''
-                        recordIssues tools: [flake8()],
+                        recordIssues tools: [flake8(pattern: 'flake8-result.txt')],
                             qualityGates: [
                                 [threshold: 8, type: 'TOTAL', unstable: true],
-                                [threshold: 10, type: 'TOTAL', failure: true]
+                                [threshold: 10, type: 'TOTAL', unstable: false]
                             ]
                     }
                 }
