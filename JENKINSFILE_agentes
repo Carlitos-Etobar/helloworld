@@ -16,20 +16,6 @@ pipeline {
             }
         }
 
-        stage('Start Flask') {
-            agent { label 'windows' }
-            steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    bat '''
-                        SET FLASK_APP=app\\api.py
-                        SET FLASK_ENV=development
-                        start "" /B flask run
-                        ping 127.0.0.1 -n 5 >nul
-                    '''
-                }
-            }
-        }
-
         stage('Error-Test') {
             parallel {
                 stage('Unit') {
