@@ -59,7 +59,6 @@ pipeline {
                                 set PYTHONPATH=%WORKSPACE%
                                 pytest --junitxml=result-rest.xml test\\rest
                             '''
-                            stash name: 'rest-results', includes: 'result-rest.xml'
                         }
                         junit 'result-rest.xml'
                     }
