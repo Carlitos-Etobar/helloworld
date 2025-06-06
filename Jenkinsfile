@@ -44,7 +44,6 @@ pipeline {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
                                 curl -L -O https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-jre8-standalone/2.28.0/wiremock-jre8-standalone-2.28.0.jar
-                                ping 127.0.0.1 -n 2 >nul
                                 start "" /B java -jar wiremock-jre8-standalone-2.28.0.jar --port 9090 -v --root-dir test\\wiremock
                                 set PYTHONPATH=%WORKSPACE%
                                 pytest --junitxml=result-rest.xml test\\rest
@@ -71,9 +70,9 @@ pipeline {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
-                                bandit -r . -f json -o bandit_output.json || exit 0
+                                bandit -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}" || exit 0
                             '''
-                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit_output.json')], qualityGates: [
+                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [
                                 [threshold: 2, type: 'TOTAL', unstable: true],
                                 [threshold: 4, type: 'TOTAL', unstable: false]
                             ]
