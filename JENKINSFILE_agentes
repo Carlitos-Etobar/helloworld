@@ -6,6 +6,24 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspaces') {
+            parallel {
+                stage('Clean Windows Workspace') {
+                    agent { label 'windows' }
+                    steps {
+                        cleanWs()
+                    }
+                }
+
+                stage('Clean Linux Workspace') {
+                    agent { label 'linux' }
+                    steps {
+                        cleanWs()
+                    }
+                }
+            }
+        }
+
         stage('Get Code') {
             agent { label 'windows' }
             steps {

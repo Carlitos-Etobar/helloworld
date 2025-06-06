@@ -2,6 +2,12 @@ pipeline {
     agent { label 'windows' }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Get Code') {
             steps {
                 echo 'Me voy a traer el codigo'
@@ -72,10 +78,11 @@ pipeline {
                             bat '''
                                 bandit -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}" || exit 0
                             '''
-                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [
-                                [threshold: 2, type: 'TOTAL', unstable: true],
-                                [threshold: 4, type: 'TOTAL', unstable: false]
-                            ]
+                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')],
+                                qualityGates: [
+                                    [threshold: 2, type: 'TOTAL', unstable: true],
+                                    [threshold: 4, type: 'TOTAL', unstable: false]
+                                ]
                         }
                     }
                 }
