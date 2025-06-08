@@ -9,14 +9,14 @@ pipeline {
         stage('Clean Workspaces') {
             parallel {
                 stage('Clean Windows Workspace') {
-                    agent { label 'windows' }
+                    agent { label 'Linux' }
                     steps {
                         cleanWs()
                     }
                 }
 
                 stage('Clean Linux Workspace') {
-                    agent { label 'linux' }
+                    agent { label 'Windows' }
                     steps {
                         cleanWs()
                     }
